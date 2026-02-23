@@ -51,9 +51,15 @@ export default function Admin() {
     const [watermarkFrameWidth, setWatermarkFrameWidth] = useState<number>(20);
     const [watermarkFrameBottom, setWatermarkFrameBottom] = useState<number>(80);
     const [useWatermarkBgImage, setUseWatermarkBgImage] = useState<boolean>(false);
+    const [useSlideshowBgImage, setUseSlideshowBgImage] = useState<boolean>(false);
+    const [slideshowBgBlur, setSlideshowBgBlur] = useState<number>(20);
+    const [useUploadPageBgImage, setUseUploadPageBgImage] = useState<boolean>(false);
+    const [uploadBgBlur, setUploadBgBlur] = useState<number>(20);
     const [imageFilter, setImageFilter] = useState<string>("none");
     const [isSavingSettings, setIsSavingSettings] = useState(false);
     const [isUploadingWatermarkBg, setIsUploadingWatermarkBg] = useState(false);
+    const [isUploadingSlideshowBg, setIsUploadingSlideshowBg] = useState(false);
+    const slideshowBgInputRef = useRef<HTMLInputElement>(null);
 
     // Initial load for LocalStorage Auth
     useEffect(() => {
@@ -107,6 +113,10 @@ export default function Admin() {
                 setWatermarkFrameWidth(data.watermarkFrameWidth !== undefined ? data.watermarkFrameWidth : 20);
                 setWatermarkFrameBottom(data.watermarkFrameBottom !== undefined ? data.watermarkFrameBottom : 80);
                 setUseWatermarkBgImage(data.useWatermarkBgImage || false);
+                setUseSlideshowBgImage(data.useSlideshowBgImage || false);
+                setSlideshowBgBlur(data.slideshowBgBlur !== undefined ? data.slideshowBgBlur : 20);
+                setUseUploadPageBgImage(data.useUploadPageBgImage || false);
+                setUploadBgBlur(data.uploadBgBlur !== undefined ? data.uploadBgBlur : 20);
                 setImageFilter(data.imageFilter || "none");
             }
         } catch (e) {
@@ -133,6 +143,10 @@ export default function Admin() {
                     watermarkFrameWidth: watermarkFrameWidth,
                     watermarkFrameBottom: watermarkFrameBottom,
                     useWatermarkBgImage: useWatermarkBgImage,
+                    useSlideshowBgImage: useSlideshowBgImage,
+                    slideshowBgBlur: slideshowBgBlur,
+                    useUploadPageBgImage: useUploadPageBgImage,
+                    uploadBgBlur: uploadBgBlur,
                     imageFilter: imageFilter
                 })
             });
@@ -287,6 +301,34 @@ export default function Admin() {
             setModalConfig({ isOpen: true, type: 'alert', title: "Fehler", message: "Verbindungsfehler." });
         } finally {
             setIsUploadingBg(false);
+        }
+    };
+
+    const handleSlideshowBgUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        setIsUploadingSlideshowBg(true);
+        try {
+            const formData = new FormData();
+            formData.append("file", file);
+
+            const res = await fetch("/api/upload/slideshow-bg", {
+                method: "POST",
+                body: formData
+            });
+
+            if (res.ok) {
+                setModalConfig({ isOpen: true, type: 'alert', title: "Erfolg", message: "Slideshow-Hintergrundbild gespeichert (Bitte speichere noch die Einstellungen)." });
+                // Wir schalten den Toggle automatisch ein
+                setUseSlideshowBgImage(true);
+            } else {
+                setModalConfig({ isOpen: true, type: 'alert', title: "Fehler", message: "Fehler beim Hochladen des Slideshow-Hintergrundbildes." });
+            }
+        } catch (err) {
+            setModalConfig({ isOpen: true, type: 'alert', title: "Fehler", message: "Verbindungsfehler." });
+        } finally {
+            setIsUploadingSlideshowBg(false);
         }
     };
 
@@ -506,6 +548,54 @@ export default function Admin() {
                             </button>
                         </div>
 
+                        {/* Diashow Hintergrundbild */}
+                        <div style={{ padding: "16px", background: "rgba(0,0,0,0.03)", borderRadius: "8px", marginBottom: "24px" }}>
+                            <label style={{ display: "flex", alignItems: "center", gap: "8px", cursor: "pointer", marginBottom: "12px" }}>
+                                <input
+                                    type="checkbox"
+                                    checked={useSlideshowBgImage}
+                                    onChange={(e) => setUseSlideshowBgImage(e.target.checked)}
+                                    style={{ width: "16px", height: "16px" }}
+                                />
+                                <span style={{ fontWeight: "bold" }}>Eigenes Hintergrundbild für Diashow verwenden</span>
+                            </label>
+                            <p style={{ fontSize: "0.85rem", color: "var(--color-text-light)", marginBottom: "12px" }}>
+                                Wenn aktiviert, wird dieses Bild unscharf (blur) als schicker Hintergrund der Diashow angezeigt.
+                            </p>
+                            {useSlideshowBgImage && (
+                                <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginBottom: "16px", background: "white", padding: "12px", borderRadius: "8px" }}>
+                                    <div style={{ display: "flex", justifyContent: "space-between" }}>
+                                        <label style={{ fontSize: "0.9rem", fontWeight: "bold" }}>Unschärfe (Blur) Regler:</label>
+                                        <span style={{ fontSize: "0.9rem", color: "var(--color-primary)", fontWeight: "bold" }}>{slideshowBgBlur}px</span>
+                                    </div>
+                                    <input
+                                        type="range"
+                                        min="0"
+                                        max="100"
+                                        value={slideshowBgBlur}
+                                        onChange={(e) => setSlideshowBgBlur(parseInt(e.target.value) || 0)}
+                                        style={{ width: "100%", cursor: "pointer" }}
+                                    />
+                                </div>
+                            )}
+                            <input
+                                type="file"
+                                ref={slideshowBgInputRef}
+                                onChange={handleSlideshowBgUpload}
+                                accept="image/*"
+                                style={{ display: "none" }}
+                            />
+                            <button
+                                className="btn-outline"
+                                onClick={() => slideshowBgInputRef.current?.click()}
+                                disabled={isUploadingSlideshowBg}
+                                style={{ fontSize: "0.9rem", padding: "8px 16px", display: "inline-flex", alignItems: "center", gap: "8px" }}
+                            >
+                                {isUploadingSlideshowBg ? <Loader2 className="animate-spin" size={16} /> : <Upload size={16} />}
+                                Hintergrundbild für Diashow (.jpg/.png) hochladen
+                            </button>
+                        </div>
+
                         <hr style={{ border: "none", borderTop: "1px solid var(--glass-border)", marginBottom: "24px" }} />
 
                         <h3 style={{ marginBottom: "16px" }}>Bild-Effekte & Polaroid-Rahmen</h3>
@@ -678,9 +768,35 @@ export default function Admin() {
                             </div>
 
                             <div>
+                                <label style={{ display: "flex", alignItems: "center", gap: "8px", cursor: "pointer", marginBottom: "8px" }}>
+                                    <input
+                                        type="checkbox"
+                                        checked={useUploadPageBgImage}
+                                        onChange={(e) => setUseUploadPageBgImage(e.target.checked)}
+                                        style={{ width: "16px", height: "16px" }}
+                                    />
+                                    <span style={{ fontWeight: "bold" }}>Allgemeines Hintergrundbild für Startseite verwenden</span>
+                                </label>
                                 <p style={{ fontSize: "0.9rem", color: "var(--color-text-light)", marginBottom: "12px" }}>
-                                    Hier kannst du ein Bild hochladen, das auf der Startseite im Hintergrund des Upload-Rahmens angezeigt wird.
+                                    Hier kannst du ein Bild hochladen, das auf der Startseite vollflächig als verschwommener Hintergrund angezeigt wird.
                                 </p>
+
+                                {useUploadPageBgImage && (
+                                    <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginBottom: "16px", background: "rgba(0,0,0,0.03)", padding: "12px", borderRadius: "8px" }}>
+                                        <div style={{ display: "flex", justifyContent: "space-between" }}>
+                                            <label style={{ fontSize: "0.9rem", fontWeight: "bold" }}>Unschärfe (Blur) Regler:</label>
+                                            <span style={{ fontSize: "0.9rem", color: "var(--color-primary)", fontWeight: "bold" }}>{uploadBgBlur}px</span>
+                                        </div>
+                                        <input
+                                            type="range"
+                                            min="0"
+                                            max="100"
+                                            value={uploadBgBlur}
+                                            onChange={(e) => setUploadBgBlur(parseInt(e.target.value) || 0)}
+                                            style={{ width: "100%", cursor: "pointer" }}
+                                        />
+                                    </div>
+                                )}
 
                                 <input
                                     type="file"

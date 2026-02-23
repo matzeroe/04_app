@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { writeFile, mkdir } from "fs/promises";
 import { join } from "path";
 import { existsSync } from "fs";
+import sharp from "sharp";
 
 export async function POST(request: Request) {
     try {
@@ -12,7 +13,8 @@ export async function POST(request: Request) {
             return NextResponse.json({ error: "Keine Datei hochgeladen." }, { status: 400 });
         }
 
-        const buffer = Buffer.from(await file.arrayBuffer());
+        const rawBuffer = Buffer.from(await file.arrayBuffer());
+        const buffer = await sharp(rawBuffer).rotate().toBuffer().catch(() => rawBuffer);
 
         // Speicherpfad für Hintergrund definieren
         const publicDir = join(process.cwd(), "public");

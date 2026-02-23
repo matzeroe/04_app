@@ -28,7 +28,7 @@ export async function GET() {
                 const stats = await stat(filePath);
                 return {
                     filename,
-                    url: `/api/uploads/${filename}`,
+                    url: `/api/uploads/${filename}?v=${stats.mtimeMs}`,
                     createdAt: stats.birthtimeMs || stats.mtimeMs // fallback auf mtime
                 };
             })

@@ -24,6 +24,10 @@ export async function GET() {
                 watermarkFrameWidth: 20,
                 watermarkFrameBottom: 80,
                 useWatermarkBgImage: false,
+                useSlideshowBgImage: false,
+                slideshowBgBlur: 20,
+                useUploadPageBgImage: false,
+                uploadBgBlur: 20,
                 imageFilter: "none"
             });
         }
@@ -42,6 +46,10 @@ export async function GET() {
         if (parsed.watermarkFrameWidth === undefined) parsed.watermarkFrameWidth = 20;
         if (parsed.watermarkFrameBottom === undefined) parsed.watermarkFrameBottom = 80;
         if (parsed.useWatermarkBgImage === undefined) parsed.useWatermarkBgImage = false;
+        if (parsed.useSlideshowBgImage === undefined) parsed.useSlideshowBgImage = false;
+        if (parsed.slideshowBgBlur === undefined) parsed.slideshowBgBlur = 20;
+        if (parsed.useUploadPageBgImage === undefined) parsed.useUploadPageBgImage = false;
+        if (parsed.uploadBgBlur === undefined) parsed.uploadBgBlur = 20;
         if (!parsed.imageFilter) parsed.imageFilter = "none";
 
         return NextResponse.json(parsed);
@@ -60,6 +68,10 @@ export async function GET() {
             watermarkFrameWidth: 20,
             watermarkFrameBottom: 80,
             useWatermarkBgImage: false,
+            useSlideshowBgImage: false,
+            slideshowBgBlur: 20,
+            useUploadPageBgImage: false,
+            uploadBgBlur: 20,
             imageFilter: "none"
         }); // Fallback
     }
@@ -89,6 +101,10 @@ export async function POST(request: Request) {
         const watermarkFrameWidth = typeof data.watermarkFrameWidth === 'number' ? data.watermarkFrameWidth : 20;
         const watermarkFrameBottom = typeof data.watermarkFrameBottom === 'number' ? data.watermarkFrameBottom : 80;
         const useWatermarkBgImage = data.useWatermarkBgImage === true;
+        const useSlideshowBgImage = data.useSlideshowBgImage === true;
+        const slideshowBgBlur = typeof data.slideshowBgBlur === 'number' ? data.slideshowBgBlur : 20;
+        const useUploadPageBgImage = data.useUploadPageBgImage === true;
+        const uploadBgBlur = typeof data.uploadBgBlur === 'number' ? data.uploadBgBlur : 20;
         const imageFilter = ["none", "grayscale", "sepia"].includes(data.imageFilter) ? data.imageFilter : "none";
         const eventName = typeof data.eventName === 'string' ? data.eventName.trim() : "Ella & Matze";
 
@@ -105,6 +121,10 @@ export async function POST(request: Request) {
             watermarkFrameWidth: watermarkFrameWidth,
             watermarkFrameBottom: watermarkFrameBottom,
             useWatermarkBgImage: useWatermarkBgImage,
+            useSlideshowBgImage: useSlideshowBgImage,
+            slideshowBgBlur: slideshowBgBlur,
+            useUploadPageBgImage: useUploadPageBgImage,
+            uploadBgBlur: uploadBgBlur,
             imageFilter: imageFilter
         }));
         return NextResponse.json({ success: true });

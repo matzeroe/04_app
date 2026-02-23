@@ -21,6 +21,8 @@ export default function Slideshow() {
     // Queue System für neue Fotos
     const [newImagesQueue, setNewImagesQueue] = useState<string[]>([]);
     const [isShowingNew, setIsShowingNew] = useState(false);
+    const [useSlideshowBgImage, setUseSlideshowBgImage] = useState(false);
+    const [slideshowBgBlur, setSlideshowBgBlur] = useState<number>(20);
 
     const containerRef = useRef<HTMLDivElement>(null);
 
@@ -133,6 +135,12 @@ export default function Slideshow() {
                 }
                 if (settings.newImageInterval) {
                     setNewImageInterval(settings.newImageInterval);
+                }
+                if (settings.useSlideshowBgImage !== undefined) {
+                    setUseSlideshowBgImage(settings.useSlideshowBgImage);
+                }
+                if (settings.slideshowBgBlur !== undefined) {
+                    setSlideshowBgBlur(settings.slideshowBgBlur);
                 }
             }
         } catch (err) {
@@ -279,11 +287,54 @@ export default function Slideshow() {
 
     if (images.length === 0) {
         return (
-            <main style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: "#000" }}>
-                <div style={{ textAlign: "center", color: "white" }}>
-                    <ImageIcon size={64} style={{ opacity: 0.5, margin: "0 auto 20px" }} />
-                    <h2>Noch keine Bilder vorhanden</h2>
-                    <p style={{ opacity: 0.7, marginTop: "10px" }}>Ladet das erste Foto hoch!</p>
+            <main
+                style={{
+                    minHeight: "100vh",
+                    background: "#000",
+                    position: "relative",
+                    overflow: "hidden",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center"
+                }}
+            >
+                {/* Custom Hintergrund (Blurred) */}
+                {useSlideshowBgImage && (
+                    <div style={{
+                        position: "absolute",
+                        inset: 0,
+                        zIndex: 0,
+                        overflow: "hidden"
+                    }}>
+                        <img
+                            src={`/api/public/slideshow-bg.jpg?t=${Date.now()}`}
+                            alt="Background"
+                            style={{
+                                width: "100%",
+                                height: "100%",
+                                objectFit: "cover",
+                                filter: `blur(${slideshowBgBlur}px)`,
+                                transform: `scale(${1 + (slideshowBgBlur * 0.01)})`,
+                                opacity: 0.4
+                            }}
+                        />
+                    </div>
+                )}
+
+                <div
+                    className="glass-panel animate-fade-up"
+                    style={{
+                        textAlign: "center",
+                        zIndex: 10,
+                        padding: "40px",
+                        maxWidth: "600px"
+                    }}
+                >
+                    <p style={{ color: "var(--color-text-light)", marginBottom: "20px", fontSize: "1.2rem" }}>Noch keine Bilder hochgeladen.</p>
+                    <h2 style={{ fontSize: "2.5rem", color: "white", textShadow: "0 2px 10px rgba(0,0,0,0.5)" }}>
+                        {typeof window !== "undefined" ? window.location.origin : ""}
+                    </h2>
+                    <p style={{ color: "var(--color-primary)", marginTop: "20px", fontSize: "1.2rem" }}>Ladet das erste Foto hoch!</p>
                 </div>
             </main>
         );
@@ -301,6 +352,29 @@ export default function Slideshow() {
                 overflow: "hidden"
             }}
         >
+
+            {/* Custom Hintergrund (Blurred) */}
+            {useSlideshowBgImage && (
+                <div style={{
+                    position: "absolute",
+                    inset: 0,
+                    zIndex: 0,
+                    overflow: "hidden"
+                }}>
+                    <img
+                        src={`/api/public/slideshow-bg.jpg?t=${Date.now()}`}
+                        alt="Background"
+                        style={{
+                            width: "100%",
+                            height: "100%",
+                            objectFit: "cover",
+                            filter: `blur(${slideshowBgBlur}px)`,
+                            transform: `scale(${1 + (slideshowBgBlur * 0.01)})`, // Scaliert je nach blur-level dynamisch mit um Ränder zu verstecken
+                            opacity: 0.4
+                        }}
+                    />
+                </div>
+            )}
 
 
             {/* Container für die Bilder (übereinander gelegt für sanften Übergang) */}

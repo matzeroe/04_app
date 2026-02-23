@@ -18,14 +18,14 @@ export async function POST(request: NextRequest) {
 
         // Wir speichern das Bild immer unter demselben Namen, damit es einfach überschrieben wird
         const uploadDir = join(process.cwd(), "public");
-        const path = join(uploadDir, "watermark-bg.jpg");
+        const path = join(uploadDir, "slideshow-bg.jpg");
 
         await writeFile(path, buffer);
-        console.log(`Wasserzeichen-Hintergrund gespeichert unter ${path}`);
+        console.log(`Slideshow-Hintergrund gespeichert unter ${path}`);
 
-        return NextResponse.json({ success: true, url: "/api/public/watermark-bg.jpg" });
+        return NextResponse.json({ success: true, url: "/api/public/slideshow-bg.jpg" });
     } catch (error) {
-        console.error("Fehler beim Upload des Wasserzeichen-Hintergrunds:", error);
+        console.error("Fehler beim Upload des Slideshow-Hintergrunds:", error);
         return NextResponse.json({ error: "Fehler beim Upload" }, { status: 500 });
     }
 }

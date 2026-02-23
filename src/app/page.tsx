@@ -25,6 +25,8 @@ export default function Home() {
 
   // Config State
   const [eventName, setEventName] = useState("Ella & Matze");
+  const [useUploadPageBgImage, setUseUploadPageBgImage] = useState(false);
+  const [uploadBgBlur, setUploadBgBlur] = useState<number>(20);
 
   useEffect(() => {
     // Event Titel aus Settings laden
@@ -34,6 +36,8 @@ export default function Home() {
         if (res.ok) {
           const data = await res.json();
           if (data.eventName) setEventName(data.eventName);
+          if (data.useUploadPageBgImage !== undefined) setUseUploadPageBgImage(data.useUploadPageBgImage);
+          if (data.uploadBgBlur !== undefined) setUploadBgBlur(data.uploadBgBlur);
         }
       } catch (e) {
         console.error("Fehler beim Laden des Titels", e);
@@ -229,6 +233,29 @@ export default function Home() {
 
   return (
     <>
+      {/* Globaler Hintergrund (Blurred Custom Bg) */}
+      {useUploadPageBgImage && bgUrl && (
+        <div style={{
+          position: "fixed",
+          inset: 0,
+          zIndex: -1,
+          overflow: "hidden"
+        }}>
+          <img
+            src={bgUrl}
+            alt="Upload Background"
+            style={{
+              width: "100%",
+              height: "100%",
+              objectFit: "cover",
+              filter: `blur(${uploadBgBlur}px)`,
+              transform: `scale(${1 + (uploadBgBlur * 0.01)})`,
+              opacity: 0.6
+            }}
+          />
+        </div>
+      )}
+
       {/* Login Overlay */}
       {!isAuthenticated && (
         <div style={{

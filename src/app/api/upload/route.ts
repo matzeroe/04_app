@@ -14,7 +14,14 @@ export async function POST(request: NextRequest) {
         }
 
         const bytes = await file.arrayBuffer();
-        const buffer = Buffer.from(bytes);
+        const rawBuffer = Buffer.from(bytes);
+
+        // EXIF-Daten auslesen und Bild entsprechend rotieren
+        // .rotate() ohne Argumente nutzt die EXIF Orientation und dreht die Pixel physisch richtig hin
+        const buffer = await sharp(rawBuffer).rotate().toBuffer().catch((err) => {
+            console.warn("EXIF-Rotation fehlgeschlagen, speichere unmodifiziert:", err);
+            return rawBuffer;
+        });
 
         // Zielverzeichnis
         const uploadDir = join(process.cwd(), "public", "uploads");
