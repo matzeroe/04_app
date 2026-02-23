@@ -54,7 +54,7 @@ export default function Home() {
         // Um Caching zu umgehen, setzen wir einen Timestamp an.
         // Da wir nicht genau wissen ob .jpg oder .png hängen wir einfach /custom-bg.jpg an.
         // (Für eine echte Prod-App könnte das Backend die verfügbare URL liefern)
-        const possibleUrls = ['/custom-bg.jpg', '/custom-bg.png', '/custom-bg.jpeg'];
+        const possibleUrls = ['/api/public/custom-bg.jpg', '/api/public/custom-bg.png', '/api/public/custom-bg.jpeg'];
 
         for (const url of possibleUrls) {
           const res = await fetch(`${url}?t=${Date.now()}`, { method: 'HEAD' });

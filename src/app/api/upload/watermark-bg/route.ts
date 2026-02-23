@@ -21,7 +21,7 @@ export async function POST(request: NextRequest) {
         await writeFile(path, buffer);
         console.log(`Wasserzeichen-Hintergrund gespeichert unter ${path}`);
 
-        return NextResponse.json({ success: true, url: "/watermark-bg.jpg" });
+        return NextResponse.json({ success: true, url: "/api/public/watermark-bg.jpg" });
     } catch (error) {
         console.error("Fehler beim Upload des Wasserzeichen-Hintergrunds:", error);
         return NextResponse.json({ error: "Fehler beim Upload" }, { status: 500 });

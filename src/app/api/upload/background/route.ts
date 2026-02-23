@@ -31,7 +31,7 @@ export async function POST(request: Request) {
         await writeFile(filePath, buffer);
 
         // Zeitstempel anhängen, um Caching im Browser auszuhebeln
-        const url = `/${filename}?t=${Date.now()}`;
+        const url = `/api/public/${filename}?t=${Date.now()}`;
 
         return NextResponse.json({ success: true, url: url });
     } catch (error) {

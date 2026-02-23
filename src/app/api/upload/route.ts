@@ -67,7 +67,7 @@ export async function POST(request: NextRequest) {
             // Ohne Wasserzeichen und Filter speichern
             await writeFile(path, buffer);
             console.log(`Datei gespeichert unter ${path} (Original)`);
-            return NextResponse.json({ success: true, filename, url: `/uploads/${filename}` });
+            return NextResponse.json({ success: true, filename, url: `/api/uploads/${filename}` });
         }
 
         // Bild verarbeiten (Filter und/oder Wasserzeichen)
@@ -187,7 +187,7 @@ ${mainTexts}
 
         console.log(`Datei gespeichert unter ${path}`);
 
-        return NextResponse.json({ success: true, filename, url: `/uploads/${filename}` });
+        return NextResponse.json({ success: true, filename, url: `/api/uploads/${filename}` });
     } catch (error) {
         console.error("Fehler beim Upload:", error);
         return NextResponse.json({ error: "Fehler beim Upload der Datei." }, { status: 500 });
