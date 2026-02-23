@@ -30,6 +30,15 @@ export async function POST(request: NextRequest) {
         const filename = `wedding-${uniqueSuffix}.${extension}`;
         const path = join(uploadDir, filename);
 
+        // Backup-Verzeichnis für Originalbilder erstellen und Bild dort als erstes speichern
+        const originalsDir = join(uploadDir, "originals");
+        if (!existsSync(originalsDir)) {
+            await mkdir(originalsDir, { recursive: true });
+        }
+        const originalPath = join(originalsDir, filename);
+        await writeFile(originalPath, buffer);
+        console.log(`Originaldatei als Backup gespeichert unter ${originalPath}`);
+
         // Einstellungen laden
         let watermarkEnabled = false;
         let watermarkText = "02.05.2026\nElla & Matze";

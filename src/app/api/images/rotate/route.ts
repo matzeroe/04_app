@@ -19,15 +19,29 @@ export async function POST(request: Request) {
 
         const uploadDir = join(process.cwd(), "public", "uploads");
         const filePath = join(uploadDir, filename);
+        const originalsDir = join(uploadDir, "originals");
+        const originalFilePath = join(originalsDir, filename);
 
-        if (!existsSync(filePath)) {
+        let sourceFilePath = filePath;
+        if (existsSync(originalFilePath)) {
+            sourceFilePath = originalFilePath;
+        } else if (!existsSync(filePath)) {
             return NextResponse.json({ error: "Datei nicht gefunden." }, { status: 404 });
         }
 
-        // Bild rotieren mit sharp und überschreiben
-        const buffer = await fsPromises.readFile(filePath);
-
+        // Bild rotieren mit sharp
+        const buffer = await fsPromises.readFile(sourceFilePath);
         let processedImage = sharp(buffer).rotate(rotation);
+
+        // Wir speichern das neu gedrehte Bild als "neues" Originalbild ab
+        const rotatedOriginalBuffer = await processedImage.toBuffer();
+        if (!existsSync(originalsDir)) {
+            await fsPromises.mkdir(originalsDir, { recursive: true });
+        }
+        await fsPromises.writeFile(originalFilePath, rotatedOriginalBuffer);
+
+        // Für die weiteren Schritte (Wasserzeichen, Filter) arbeiten wir jetzt mit dem frisch gedrehten Original
+        processedImage = sharp(rotatedOriginalBuffer);
 
         // Einstellungen laden
         let watermarkEnabled = false;

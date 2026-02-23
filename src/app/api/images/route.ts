@@ -3,6 +3,8 @@ import { readdir, stat } from "fs/promises";
 import { join } from "path";
 import { existsSync } from "fs";
 
+export const dynamic = "force-dynamic";
+
 export async function GET() {
     try {
         const uploadDir = join(process.cwd(), "public", "uploads");

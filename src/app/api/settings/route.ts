@@ -5,6 +5,8 @@ import { existsSync } from "fs";
 
 const settingsPath = join(process.cwd(), "public", "settings.json");
 
+export const dynamic = "force-dynamic";
+
 export async function GET() {
     try {
         if (!existsSync(settingsPath)) {

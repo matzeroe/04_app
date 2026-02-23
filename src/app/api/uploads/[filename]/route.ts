@@ -3,6 +3,8 @@ import { join } from "path";
 import { existsSync } from "fs";
 import { readFile } from "fs/promises";
 
+export const dynamic = "force-dynamic";
+
 export async function GET(
     request: NextRequest,
     context: { params: Promise<{ filename: string }> }
