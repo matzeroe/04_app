@@ -66,6 +66,7 @@ export async function POST(request: NextRequest) {
         let watermarkBorderRadius = 24;
         let useWatermarkBgImage = false;
         let imageFilter = "none";
+        let maxFileSizeMB = 5;
         const settingsPath = join(process.cwd(), "public", "settings.json");
         try {
             if (existsSync(settingsPath)) {
@@ -82,12 +83,15 @@ export async function POST(request: NextRequest) {
                 if (parsed.watermarkBorderRadius !== undefined) watermarkBorderRadius = parsed.watermarkBorderRadius;
                 if (parsed.useWatermarkBgImage === true) useWatermarkBgImage = true;
                 if (parsed.imageFilter) imageFilter = parsed.imageFilter;
+                if (parsed.maxFileSizeMB !== undefined) maxFileSizeMB = parsed.maxFileSizeMB;
             }
         } catch (e) {
             console.error("Konnte Einstellungen nicht laden, ignoriere Wasserzeichen:", e);
         }
 
-        const needsProcessing = watermarkEnabled || imageFilter !== "none";
+        const maxSizeBytes = maxFileSizeMB * 1024 * 1024;
+        const isTooLarge = buffer.length > maxSizeBytes;
+        const needsProcessing = watermarkEnabled || imageFilter !== "none" || isTooLarge;
 
         // Wenn Rahmen aktiviert, als PNG speichern für transparente Ecken
         const finalExtension = watermarkEnabled ? 'png' : originalExtension;
@@ -117,6 +121,7 @@ export async function POST(request: NextRequest) {
         // Bild verarbeiten (Filter und/oder Wasserzeichen)
         try {
             let image = sharp(buffer);
+            let finalBuffer: Buffer;
 
             // 1. Bild-Filter anwenden
             if (imageFilter === "grayscale") {
@@ -189,7 +194,7 @@ ${mainTexts}
 
                     // 2. Das originale Bild auf den Hintergrund composen, danach das Text-SVG
                     const originalImageBuffer = await image.toBuffer();
-                    await sharp(bgBuffer)
+                    finalBuffer = await sharp(bgBuffer)
                         .composite([
                             {
                                 input: originalImageBuffer,
@@ -207,11 +212,10 @@ ${mainTexts}
                             }
                         ])
                         .png()
-                        .toFile(tmpPath);
-                    await rename(tmpPath, path);
+                        .toBuffer();
                 } else {
                     // Fallback: Weißer Rahmen
-                    await image
+                    finalBuffer = await image
                         // 1. Zuerst den weißen Hintergrund/Rahmen hinzufügen
                         .extend({
                             top: watermarkFrameWidth,
@@ -238,14 +242,44 @@ ${mainTexts}
                             }
                         ])
                         .png()
-                        .toFile(tmpPath);
-                    await rename(tmpPath, path);
+                        .toBuffer();
                 }
             } else {
-                // Nur Filter anwenden
-                await image.toFile(tmpPath);
-                await rename(tmpPath, path);
+                // Nur Filter laden / konvertieren
+                finalBuffer = await image.toBuffer();
             }
+
+            // --- Kompressions-Schleife prüfen: Iterativ schrumpfen bis maxFileSizeMB erreicht wird ---
+            if (finalBuffer.length > maxSizeBytes) {
+                let sMeta = await sharp(finalBuffer).metadata();
+                let currentWidth = sMeta.width || 1200;
+                let quality = 80;
+                let attempt = 0;
+
+                console.log(`Initialgröße: ${(finalBuffer.length / 1024 / 1024).toFixed(2)} MB. Ziel: ${maxFileSizeMB} MB`);
+
+                while (finalBuffer.length > maxSizeBytes && attempt < 5 && currentWidth > 400) {
+                    attempt++;
+                    currentWidth = Math.floor(currentWidth * 0.85); // 15% runterskalieren pro Iteration
+                    quality = Math.max(20, quality - 15);
+
+                    let resizer = sharp(finalBuffer).resize({ width: currentWidth });
+
+                    if (finalExtension === 'png') {
+                        // Bei PNG nutzen wir die Palette+Quantisierung, das spart massiv Platz (wie TinyPNG)
+                        resizer = resizer.png({ quality: quality, palette: true });
+                    } else {
+                        resizer = resizer.jpeg({ quality: quality });
+                    }
+
+                    finalBuffer = await resizer.toBuffer();
+                    console.log(`> Kompression Iteration ${attempt}: ${(finalBuffer.length / 1024 / 1024).toFixed(2)} MB (Breite: ${currentWidth}px, Qual: ${quality})`);
+                }
+            }
+
+            // Finale Version endlich auf Festplatte schreiben
+            await writeFile(tmpPath, finalBuffer);
+            await rename(tmpPath, path);
 
         } catch (sharpError) {
             console.warn("Fehler bei der Bildverarbeitung, speichere ohne Wasserzeichen:", sharpError);

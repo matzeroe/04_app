@@ -29,6 +29,7 @@ export async function GET() {
                 slideshowBgBlur: 20,
                 useUploadPageBgImage: false,
                 uploadBgBlur: 20,
+                maxFileSizeMB: 5,
                 imageFilter: "none",
                 txtUploadTitle: "Teilt eure schönsten Momente unserer Hochzeit mit uns!",
                 txtUploadButton: "Fotos auswählen",
@@ -62,6 +63,7 @@ export async function GET() {
         if (parsed.slideshowBgBlur === undefined) parsed.slideshowBgBlur = 20;
         if (parsed.useUploadPageBgImage === undefined) parsed.useUploadPageBgImage = false;
         if (parsed.uploadBgBlur === undefined) parsed.uploadBgBlur = 20;
+        if (parsed.maxFileSizeMB === undefined) parsed.maxFileSizeMB = 5;
         if (!parsed.imageFilter) parsed.imageFilter = "none";
         if (!parsed.txtUploadTitle) parsed.txtUploadTitle = "Teilt eure schönsten Momente unserer Hochzeit mit uns!";
         if (!parsed.txtUploadButton) parsed.txtUploadButton = "Fotos auswählen";
@@ -95,6 +97,7 @@ export async function GET() {
             slideshowBgBlur: 20,
             useUploadPageBgImage: false,
             uploadBgBlur: 20,
+            maxFileSizeMB: 5,
             imageFilter: "none",
             txtUploadTitle: "Teilt eure schönsten Momente unserer Hochzeit mit uns!",
             txtUploadButton: "Fotos auswählen",
@@ -141,6 +144,7 @@ export async function POST(request: Request) {
         const slideshowBgBlur = typeof data.slideshowBgBlur === 'number' ? data.slideshowBgBlur : 20;
         const useUploadPageBgImage = data.useUploadPageBgImage === true;
         const uploadBgBlur = typeof data.uploadBgBlur === 'number' ? data.uploadBgBlur : 20;
+        const maxFileSizeMB = typeof data.maxFileSizeMB === 'number' ? Math.max(1, Math.min(100, data.maxFileSizeMB)) : 5;
         const imageFilter = ["none", "grayscale", "sepia"].includes(data.imageFilter) ? data.imageFilter : "none";
         const eventName = typeof data.eventName === 'string' ? data.eventName.trim() : "Ella & Matze";
 
@@ -175,6 +179,7 @@ export async function POST(request: Request) {
             slideshowBgBlur: slideshowBgBlur,
             useUploadPageBgImage: useUploadPageBgImage,
             uploadBgBlur: uploadBgBlur,
+            maxFileSizeMB: maxFileSizeMB,
             imageFilter: imageFilter,
             txtUploadTitle: txtUploadTitle,
             txtUploadButton: txtUploadButton,

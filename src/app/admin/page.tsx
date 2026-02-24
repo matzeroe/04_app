@@ -57,6 +57,7 @@ export default function Admin() {
     const [slideshowBgBlur, setSlideshowBgBlur] = useState<number>(20);
     const [useUploadPageBgImage, setUseUploadPageBgImage] = useState<boolean>(false);
     const [uploadBgBlur, setUploadBgBlur] = useState<number>(20);
+    const [maxFileSizeMB, setMaxFileSizeMB] = useState<number>(5);
     const [imageFilter, setImageFilter] = useState<string>("none");
 
     const [txtUploadTitle, setTxtUploadTitle] = useState("Teilt eure schönsten Momente unserer Hochzeit mit uns!");
@@ -143,6 +144,7 @@ export default function Admin() {
                 setSlideshowBgBlur(data.slideshowBgBlur !== undefined ? data.slideshowBgBlur : 20);
                 setUseUploadPageBgImage(data.useUploadPageBgImage || false);
                 setUploadBgBlur(data.uploadBgBlur !== undefined ? data.uploadBgBlur : 20);
+                setMaxFileSizeMB(data.maxFileSizeMB !== undefined ? data.maxFileSizeMB : 5);
                 setImageFilter(data.imageFilter || "none");
 
                 if (data.txtUploadTitle) setTxtUploadTitle(data.txtUploadTitle);
@@ -187,6 +189,7 @@ export default function Admin() {
                     slideshowBgBlur: slideshowBgBlur,
                     useUploadPageBgImage: useUploadPageBgImage,
                     uploadBgBlur: uploadBgBlur,
+                    maxFileSizeMB: maxFileSizeMB,
                     imageFilter: imageFilter,
                     txtUploadTitle,
                     txtUploadButton,
@@ -632,6 +635,19 @@ export default function Admin() {
                                     value={newImageInterval / 1000}
                                     onChange={(e) => setNewImageInterval(Math.max(1, parseInt(e.target.value) || 5) * 1000)}
                                     min="1" max="60"
+                                    style={{ width: "100%" }}
+                                />
+                            </div>
+                            <div style={{ flex: 1, minWidth: "150px" }}>
+                                <label style={{ display: "block", marginBottom: "8px", fontSize: "0.9rem", color: "var(--color-text-light)" }}>
+                                    Maximale Dateigröße (Megabyte)
+                                </label>
+                                <input
+                                    type="number"
+                                    className="input-field"
+                                    value={maxFileSizeMB}
+                                    onChange={(e) => setMaxFileSizeMB(Math.max(1, parseInt(e.target.value) || 5))}
+                                    min="1" max="100"
                                     style={{ width: "100%" }}
                                 />
                             </div>
