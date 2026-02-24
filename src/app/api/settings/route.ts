@@ -23,12 +23,23 @@ export async function GET() {
                 watermarkColor: "#555555",
                 watermarkFrameWidth: 20,
                 watermarkFrameBottom: 80,
+                watermarkBorderRadius: 24,
                 useWatermarkBgImage: false,
                 useSlideshowBgImage: false,
                 slideshowBgBlur: 20,
                 useUploadPageBgImage: false,
                 uploadBgBlur: 20,
-                imageFilter: "none"
+                imageFilter: "none",
+                txtUploadTitle: "Teilt eure schönsten Momente unserer Hochzeit mit uns!",
+                txtUploadButton: "Fotos auswählen",
+                txtUploadButtonSub: "Tippen Sie hier, um beliebig viele Bilder hinzuzufügen",
+                txtUploadSubmit: "Bild(er) hochladen",
+                txtUploadSuccess: "Erfolgreich hochgeladen!",
+                txtUploadSuccessSub: "Danke für eure Erinnerungen!",
+                txtSlideshowLoginTitle: "Diashow Login",
+                txtSlideshowLoginSub: "Bitte geben Sie das Passwort für die Diashow ein.",
+                txtSlideshowEmpty: "Noch keine Bilder hochgeladen.",
+                txtSlideshowEmptySub: "Scannt den Code und ladet das erste Foto hoch!"
             });
         }
 
@@ -45,12 +56,23 @@ export async function GET() {
         if (!parsed.watermarkColor) parsed.watermarkColor = "#555555";
         if (parsed.watermarkFrameWidth === undefined) parsed.watermarkFrameWidth = 20;
         if (parsed.watermarkFrameBottom === undefined) parsed.watermarkFrameBottom = 80;
+        if (parsed.watermarkBorderRadius === undefined) parsed.watermarkBorderRadius = 24;
         if (parsed.useWatermarkBgImage === undefined) parsed.useWatermarkBgImage = false;
         if (parsed.useSlideshowBgImage === undefined) parsed.useSlideshowBgImage = false;
         if (parsed.slideshowBgBlur === undefined) parsed.slideshowBgBlur = 20;
         if (parsed.useUploadPageBgImage === undefined) parsed.useUploadPageBgImage = false;
         if (parsed.uploadBgBlur === undefined) parsed.uploadBgBlur = 20;
         if (!parsed.imageFilter) parsed.imageFilter = "none";
+        if (!parsed.txtUploadTitle) parsed.txtUploadTitle = "Teilt eure schönsten Momente unserer Hochzeit mit uns!";
+        if (!parsed.txtUploadButton) parsed.txtUploadButton = "Fotos auswählen";
+        if (!parsed.txtUploadButtonSub) parsed.txtUploadButtonSub = "Tippen Sie hier, um beliebig viele Bilder hinzuzufügen";
+        if (!parsed.txtUploadSubmit) parsed.txtUploadSubmit = "Bild(er) hochladen";
+        if (!parsed.txtUploadSuccess) parsed.txtUploadSuccess = "Erfolgreich hochgeladen!";
+        if (!parsed.txtUploadSuccessSub) parsed.txtUploadSuccessSub = "Danke für eure Erinnerungen!";
+        if (!parsed.txtSlideshowLoginTitle) parsed.txtSlideshowLoginTitle = "Diashow Login";
+        if (!parsed.txtSlideshowLoginSub) parsed.txtSlideshowLoginSub = "Bitte geben Sie das Passwort für die Diashow ein.";
+        if (!parsed.txtSlideshowEmpty) parsed.txtSlideshowEmpty = "Noch keine Bilder hochgeladen.";
+        if (!parsed.txtSlideshowEmptySub) parsed.txtSlideshowEmptySub = "Scannt den Code und ladet das erste Foto hoch!";
 
         return NextResponse.json(parsed);
     } catch (error) {
@@ -67,12 +89,25 @@ export async function GET() {
             watermarkColor: "#555555",
             watermarkFrameWidth: 20,
             watermarkFrameBottom: 80,
+            watermarkBorderRadius: 24,
             useWatermarkBgImage: false,
             useSlideshowBgImage: false,
             slideshowBgBlur: 20,
             useUploadPageBgImage: false,
             uploadBgBlur: 20,
-            imageFilter: "none"
+            imageFilter: "none",
+            txtUploadTitle: "Teilt eure schönsten Momente unserer Hochzeit mit uns!",
+            txtUploadButton: "Fotos auswählen",
+            txtUploadButtonSub: "Tippen Sie hier, um beliebig viele Bilder hinzuzufügen",
+            txtUploadSubmit: "Bild(er) hochladen",
+            txtUploadSuccess: "Erfolgreich hochgeladen!",
+            txtUploadSuccessSub: "Danke für eure Erinnerungen!",
+            txtSlideshowLoginTitle: "Diashow Login",
+            txtSlideshowLoginSub: "Bitte geben Sie das Passwort für die Diashow ein.",
+            txtSlideshowEmpty: "Noch keine Bilder hochgeladen.",
+            txtSlideshowEmptySub: "Scannt den Code und ladet das erste Foto hoch!",
+            txtQrSlideTitle: "Macht mit!",
+            txtQrSlideSub: "Scannt den Code, um Fotos hochzuladen!"
         }); // Fallback
     }
 }
@@ -100,6 +135,7 @@ export async function POST(request: Request) {
         const watermarkColor = data.watermarkColor || "#555555";
         const watermarkFrameWidth = typeof data.watermarkFrameWidth === 'number' ? data.watermarkFrameWidth : 20;
         const watermarkFrameBottom = typeof data.watermarkFrameBottom === 'number' ? data.watermarkFrameBottom : 80;
+        const watermarkBorderRadius = typeof data.watermarkBorderRadius === 'number' ? data.watermarkBorderRadius : 24;
         const useWatermarkBgImage = data.useWatermarkBgImage === true;
         const useSlideshowBgImage = data.useSlideshowBgImage === true;
         const slideshowBgBlur = typeof data.slideshowBgBlur === 'number' ? data.slideshowBgBlur : 20;
@@ -107,6 +143,19 @@ export async function POST(request: Request) {
         const uploadBgBlur = typeof data.uploadBgBlur === 'number' ? data.uploadBgBlur : 20;
         const imageFilter = ["none", "grayscale", "sepia"].includes(data.imageFilter) ? data.imageFilter : "none";
         const eventName = typeof data.eventName === 'string' ? data.eventName.trim() : "Ella & Matze";
+
+        const txtUploadTitle = typeof data.txtUploadTitle === 'string' ? data.txtUploadTitle.trim() : "Teilt eure schönsten Momente unserer Hochzeit mit uns!";
+        const txtUploadButton = typeof data.txtUploadButton === 'string' ? data.txtUploadButton.trim() : "Fotos auswählen";
+        const txtUploadButtonSub = typeof data.txtUploadButtonSub === 'string' ? data.txtUploadButtonSub.trim() : "Tippen Sie hier, um beliebig viele Bilder hinzuzufügen";
+        const txtUploadSubmit = typeof data.txtUploadSubmit === 'string' ? data.txtUploadSubmit.trim() : "Bild(er) hochladen";
+        const txtUploadSuccess = typeof data.txtUploadSuccess === 'string' ? data.txtUploadSuccess.trim() : "Erfolgreich hochgeladen!";
+        const txtUploadSuccessSub = typeof data.txtUploadSuccessSub === 'string' ? data.txtUploadSuccessSub.trim() : "Danke für eure Erinnerungen!";
+        const txtSlideshowLoginTitle = typeof data.txtSlideshowLoginTitle === 'string' ? data.txtSlideshowLoginTitle.trim() : "Diashow Login";
+        const txtSlideshowLoginSub = typeof data.txtSlideshowLoginSub === 'string' ? data.txtSlideshowLoginSub.trim() : "Bitte geben Sie das Passwort für die Diashow ein.";
+        const txtSlideshowEmpty = typeof data.txtSlideshowEmpty === 'string' ? data.txtSlideshowEmpty.trim() : "Noch keine Bilder hochgeladen.";
+        const txtSlideshowEmptySub = typeof data.txtSlideshowEmptySub === 'string' ? data.txtSlideshowEmptySub.trim() : "Scannt den Code und ladet das erste Foto hoch!";
+        const txtQrSlideTitle = typeof data.txtQrSlideTitle === 'string' ? data.txtQrSlideTitle.trim() : "Macht mit!";
+        const txtQrSlideSub = typeof data.txtQrSlideSub === 'string' ? data.txtQrSlideSub.trim() : "Scannt den Code, um Fotos hochzuladen!";
 
         await writeFile(settingsPath, JSON.stringify({
             slideshowInterval: interval,
@@ -120,12 +169,25 @@ export async function POST(request: Request) {
             watermarkColor: watermarkColor,
             watermarkFrameWidth: watermarkFrameWidth,
             watermarkFrameBottom: watermarkFrameBottom,
+            watermarkBorderRadius: watermarkBorderRadius,
             useWatermarkBgImage: useWatermarkBgImage,
             useSlideshowBgImage: useSlideshowBgImage,
             slideshowBgBlur: slideshowBgBlur,
             useUploadPageBgImage: useUploadPageBgImage,
             uploadBgBlur: uploadBgBlur,
-            imageFilter: imageFilter
+            imageFilter: imageFilter,
+            txtUploadTitle: txtUploadTitle,
+            txtUploadButton: txtUploadButton,
+            txtUploadButtonSub: txtUploadButtonSub,
+            txtUploadSubmit: txtUploadSubmit,
+            txtUploadSuccess: txtUploadSuccess,
+            txtUploadSuccessSub: txtUploadSuccessSub,
+            txtSlideshowLoginTitle: txtSlideshowLoginTitle,
+            txtSlideshowLoginSub: txtSlideshowLoginSub,
+            txtSlideshowEmpty: txtSlideshowEmpty,
+            txtSlideshowEmptySub: txtSlideshowEmptySub,
+            txtQrSlideTitle: txtQrSlideTitle,
+            txtQrSlideSub: txtQrSlideSub
         }));
         return NextResponse.json({ success: true });
 

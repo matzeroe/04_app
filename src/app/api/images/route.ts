@@ -68,6 +68,13 @@ export async function DELETE(request: Request) {
         }
 
         await unlink(filePath);
+
+        // Auch das dazugehörige Originalbild löschen (falls vorhanden)
+        const originalPath = join(uploadDir, "originals", filename);
+        if (existsSync(originalPath)) {
+            await unlink(originalPath);
+        }
+
         return NextResponse.json({ success: true, message: "Bild erfolgreich gelöscht." });
 
     } catch (error) {

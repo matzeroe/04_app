@@ -19,6 +19,7 @@ export default function Admin() {
     const [images, setImages] = useState<ImageItem[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [isDownloadingAll, setIsDownloadingAll] = useState(false);
+    const [isDownloadingOriginals, setIsDownloadingOriginals] = useState(false);
     const [deletingId, setDeletingId] = useState<string | null>(null);
     const [rotatingId, setRotatingId] = useState<string | null>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
@@ -50,12 +51,27 @@ export default function Admin() {
     const [watermarkColor, setWatermarkColor] = useState<string>("#555555");
     const [watermarkFrameWidth, setWatermarkFrameWidth] = useState<number>(20);
     const [watermarkFrameBottom, setWatermarkFrameBottom] = useState<number>(80);
+    const [watermarkBorderRadius, setWatermarkBorderRadius] = useState<number>(24);
     const [useWatermarkBgImage, setUseWatermarkBgImage] = useState<boolean>(false);
     const [useSlideshowBgImage, setUseSlideshowBgImage] = useState<boolean>(false);
     const [slideshowBgBlur, setSlideshowBgBlur] = useState<number>(20);
     const [useUploadPageBgImage, setUseUploadPageBgImage] = useState<boolean>(false);
     const [uploadBgBlur, setUploadBgBlur] = useState<number>(20);
     const [imageFilter, setImageFilter] = useState<string>("none");
+
+    const [txtUploadTitle, setTxtUploadTitle] = useState("Teilt eure schönsten Momente unserer Hochzeit mit uns!");
+    const [txtUploadButton, setTxtUploadButton] = useState("Fotos auswählen");
+    const [txtUploadButtonSub, setTxtUploadButtonSub] = useState("Tippen Sie hier, um beliebig viele Bilder hinzuzufügen");
+    const [txtUploadSubmit, setTxtUploadSubmit] = useState("Bild(er) hochladen");
+    const [txtUploadSuccess, setTxtUploadSuccess] = useState("Erfolgreich hochgeladen!");
+    const [txtUploadSuccessSub, setTxtUploadSuccessSub] = useState("Danke für eure Erinnerungen!");
+    const [txtSlideshowLoginTitle, setTxtSlideshowLoginTitle] = useState("Diashow Login");
+    const [txtSlideshowLoginSub, setTxtSlideshowLoginSub] = useState("Bitte geben Sie das Passwort für die Diashow ein.");
+    const [txtSlideshowEmpty, setTxtSlideshowEmpty] = useState("Noch keine Bilder hochgeladen.");
+    const [txtSlideshowEmptySub, setTxtSlideshowEmptySub] = useState("Scannt den Code und ladet das erste Foto hoch!");
+    const [txtQrSlideTitle, setTxtQrSlideTitle] = useState("Macht mit!");
+    const [txtQrSlideSub, setTxtQrSlideSub] = useState("Scannt den Code, um Fotos hochzuladen!");
+
     const [isSavingSettings, setIsSavingSettings] = useState(false);
     const [isUploadingWatermarkBg, setIsUploadingWatermarkBg] = useState(false);
     const [isUploadingSlideshowBg, setIsUploadingSlideshowBg] = useState(false);
@@ -112,12 +128,26 @@ export default function Admin() {
                 setWatermarkColor(data.watermarkColor || "#555555");
                 setWatermarkFrameWidth(data.watermarkFrameWidth !== undefined ? data.watermarkFrameWidth : 20);
                 setWatermarkFrameBottom(data.watermarkFrameBottom !== undefined ? data.watermarkFrameBottom : 80);
+                setWatermarkBorderRadius(data.watermarkBorderRadius !== undefined ? data.watermarkBorderRadius : 24);
                 setUseWatermarkBgImage(data.useWatermarkBgImage || false);
                 setUseSlideshowBgImage(data.useSlideshowBgImage || false);
                 setSlideshowBgBlur(data.slideshowBgBlur !== undefined ? data.slideshowBgBlur : 20);
                 setUseUploadPageBgImage(data.useUploadPageBgImage || false);
                 setUploadBgBlur(data.uploadBgBlur !== undefined ? data.uploadBgBlur : 20);
                 setImageFilter(data.imageFilter || "none");
+
+                if (data.txtUploadTitle) setTxtUploadTitle(data.txtUploadTitle);
+                if (data.txtUploadButton) setTxtUploadButton(data.txtUploadButton);
+                if (data.txtUploadButtonSub) setTxtUploadButtonSub(data.txtUploadButtonSub);
+                if (data.txtUploadSubmit) setTxtUploadSubmit(data.txtUploadSubmit);
+                if (data.txtUploadSuccess) setTxtUploadSuccess(data.txtUploadSuccess);
+                if (data.txtUploadSuccessSub) setTxtUploadSuccessSub(data.txtUploadSuccessSub);
+                if (data.txtSlideshowLoginTitle) setTxtSlideshowLoginTitle(data.txtSlideshowLoginTitle);
+                if (data.txtSlideshowLoginSub) setTxtSlideshowLoginSub(data.txtSlideshowLoginSub);
+                if (data.txtSlideshowEmpty) setTxtSlideshowEmpty(data.txtSlideshowEmpty);
+                if (data.txtSlideshowEmptySub) setTxtSlideshowEmptySub(data.txtSlideshowEmptySub);
+                if (data.txtQrSlideTitle) setTxtQrSlideTitle(data.txtQrSlideTitle);
+                if (data.txtQrSlideSub) setTxtQrSlideSub(data.txtQrSlideSub);
             }
         } catch (e) {
             console.error("Settings load error", e);
@@ -142,12 +172,25 @@ export default function Admin() {
                     watermarkColor: watermarkColor,
                     watermarkFrameWidth: watermarkFrameWidth,
                     watermarkFrameBottom: watermarkFrameBottom,
+                    watermarkBorderRadius: watermarkBorderRadius,
                     useWatermarkBgImage: useWatermarkBgImage,
                     useSlideshowBgImage: useSlideshowBgImage,
                     slideshowBgBlur: slideshowBgBlur,
                     useUploadPageBgImage: useUploadPageBgImage,
                     uploadBgBlur: uploadBgBlur,
-                    imageFilter: imageFilter
+                    imageFilter: imageFilter,
+                    txtUploadTitle,
+                    txtUploadButton,
+                    txtUploadButtonSub,
+                    txtUploadSubmit,
+                    txtUploadSuccess,
+                    txtUploadSuccessSub,
+                    txtSlideshowLoginTitle,
+                    txtSlideshowLoginSub,
+                    txtSlideshowEmpty,
+                    txtSlideshowEmptySub,
+                    txtQrSlideTitle,
+                    txtQrSlideSub
                 })
             });
             if (res.ok) {
@@ -385,6 +428,39 @@ export default function Admin() {
         }
     };
 
+    const handleDownloadAllOriginals = async () => {
+        setIsDownloadingOriginals(true);
+        try {
+            const zip = new JSZip();
+
+            const promises = images.map(async (img, idx) => {
+                // Determine original URL
+                const originalUrl = `/uploads/originals/${img.filename}`;
+                // Try fetching original
+                const response = await fetch(originalUrl);
+                if (response.ok) {
+                    const blob = await response.blob();
+                    zip.file(`original-${idx + 1}-${img.filename}`, blob);
+                } else {
+                    // Fallback to the watermarked one if original doesn't exist
+                    const fbResponse = await fetch(img.url);
+                    const fbBlob = await fbResponse.blob();
+                    zip.file(`hochzeit-${idx + 1}-${img.filename}`, fbBlob);
+                }
+            });
+
+            await Promise.all(promises);
+            const content = await zip.generateAsync({ type: "blob" });
+            saveAs(content, "hochzeitsfotos-originale.zip");
+
+        } catch (err) {
+            setModalConfig({ isOpen: true, type: 'alert', title: "Fehler", message: "Es gab einen Fehler beim Erstellen der ZIP-Datei." });
+            console.error(err);
+        } finally {
+            setIsDownloadingOriginals(false);
+        }
+    };
+
     const handleSingleDownload = async (url: string, filename: string) => {
         try {
             const response = await fetch(url);
@@ -488,10 +564,22 @@ export default function Admin() {
                             <Settings size={20} />
                         </button>
                         <button
+                            className="btn-outline"
+                            onClick={handleDownloadAllOriginals}
+                            disabled={isDownloadingOriginals || images.length === 0}
+                            style={{ minWidth: "220px", display: "flex", gap: "8px", alignItems: "center" }}
+                        >
+                            {isDownloadingOriginals ? (
+                                <><Loader2 className="animate-spin" size={20} /> ZIP wird erstellt...</>
+                            ) : (
+                                <><Download size={20} /> Originale herunterladen</>
+                            )}
+                        </button>
+                        <button
                             className="btn-primary"
                             onClick={handleDownloadAll}
                             disabled={isDownloadingAll || images.length === 0}
-                            style={{ minWidth: "220px" }}
+                            style={{ minWidth: "220px", display: "flex", gap: "8px", alignItems: "center" }}
                         >
                             {isDownloadingAll ? (
                                 <><Loader2 className="animate-spin" size={20} /> ZIP wird erstellt...</>
@@ -714,6 +802,17 @@ export default function Admin() {
                                                 min="0" max="400"
                                             />
                                         </div>
+
+                                        <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                                            <label style={{ color: "var(--color-text-light)", fontSize: "0.9rem" }}>Ecken-Radius der Fotos [px]:</label>
+                                            <input
+                                                type="number"
+                                                className="input-field"
+                                                value={watermarkBorderRadius}
+                                                onChange={(e) => setWatermarkBorderRadius(parseInt(e.target.value) || 0)}
+                                                min="0" max="100"
+                                            />
+                                        </div>
                                     </div>
 
                                     <div style={{ marginTop: "8px", padding: "16px", background: "rgba(0,0,0,0.03)", borderRadius: "8px" }}>
@@ -817,6 +916,75 @@ export default function Admin() {
                                 </button>
                             </div>
                         </div>
+
+                        <hr style={{ border: "none", borderTop: "1px solid var(--glass-border)", margin: "24px 0" }} />
+
+                        <h3 style={{ marginBottom: "16px" }}>Texte &amp; Beschriftungen</h3>
+                        <div style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
+                            <div style={{ padding: "15px", background: "rgba(0,0,0,0.03)", borderRadius: "12px" }}>
+                                <h4 style={{ marginBottom: "10px", color: "var(--color-text)", fontWeight: "bold" }}>Upload-Seite (Titel & Buttons)</h4>
+                                <div style={{ marginBottom: "15px" }}>
+                                    <label style={{ display: "block", marginBottom: "5px", fontSize: "0.9rem" }}>Upload-Bereich Titel</label>
+                                    <input type="text" className="input-field" value={txtUploadTitle} onChange={(e) => setTxtUploadTitle(e.target.value)} />
+                                </div>
+                                <div style={{ marginBottom: "15px" }}>
+                                    <label style={{ display: "block", marginBottom: "5px", fontSize: "0.9rem" }}>Button (Fotos auswählen)</label>
+                                    <input type="text" className="input-field" value={txtUploadButton} onChange={(e) => setTxtUploadButton(e.target.value)} />
+                                </div>
+                                <div style={{ marginBottom: "15px" }}>
+                                    <label style={{ display: "block", marginBottom: "5px", fontSize: "0.9rem" }}>Button Untertitel</label>
+                                    <input type="text" className="input-field" value={txtUploadButtonSub} onChange={(e) => setTxtUploadButtonSub(e.target.value)} />
+                                </div>
+                                <div style={{ marginBottom: "15px" }}>
+                                    <label style={{ display: "block", marginBottom: "5px", fontSize: "0.9rem" }}>Upload Submit Text (verwende {"{count}"} für Anzahl)</label>
+                                    <input type="text" className="input-field" value={txtUploadSubmit} onChange={(e) => setTxtUploadSubmit(e.target.value)} />
+                                </div>
+                            </div>
+
+                            <div style={{ padding: "15px", background: "rgba(0,0,0,0.03)", borderRadius: "12px" }}>
+                                <h4 style={{ marginBottom: "10px", color: "var(--color-text)", fontWeight: "bold" }}>Upload-Seite (Erfolg)</h4>
+                                <div style={{ marginBottom: "15px" }}>
+                                    <label style={{ display: "block", marginBottom: "5px", fontSize: "0.9rem" }}>Erfolgreich Titel</label>
+                                    <input type="text" className="input-field" value={txtUploadSuccess} onChange={(e) => setTxtUploadSuccess(e.target.value)} />
+                                </div>
+                                <div style={{ marginBottom: "15px" }}>
+                                    <label style={{ display: "block", marginBottom: "5px", fontSize: "0.9rem" }}>Erfolgreich Untertitel</label>
+                                    <input type="text" className="input-field" value={txtUploadSuccessSub} onChange={(e) => setTxtUploadSuccessSub(e.target.value)} />
+                                </div>
+                            </div>
+
+                            <div style={{ padding: "15px", background: "rgba(0,0,0,0.03)", borderRadius: "12px" }}>
+                                <h4 style={{ marginBottom: "10px", color: "var(--color-text)", fontWeight: "bold" }}>Diashow</h4>
+                                <div style={{ marginBottom: "15px" }}>
+                                    <label style={{ display: "block", marginBottom: "5px", fontSize: "0.9rem" }}>Login Titel</label>
+                                    <input type="text" className="input-field" value={txtSlideshowLoginTitle} onChange={(e) => setTxtSlideshowLoginTitle(e.target.value)} />
+                                </div>
+                                <div style={{ marginBottom: "15px" }}>
+                                    <label style={{ display: "block", marginBottom: "5px", fontSize: "0.9rem" }}>Login Untertitel</label>
+                                    <input type="text" className="input-field" value={txtSlideshowLoginSub} onChange={(e) => setTxtSlideshowLoginSub(e.target.value)} />
+                                </div>
+                                <div style={{ marginBottom: "15px" }}>
+                                    <label style={{ display: "block", marginBottom: "5px", fontSize: "0.9rem" }}>Leer (Keine Bilder) Titel</label>
+                                    <input type="text" className="input-field" value={txtSlideshowEmpty} onChange={(e) => setTxtSlideshowEmpty(e.target.value)} />
+                                </div>
+                                <div style={{ marginBottom: "15px" }}>
+                                    <label style={{ display: "block", marginBottom: "5px", fontSize: "0.9rem" }}>Leer (Keine Bilder) Untertitel</label>
+                                    <input type="text" className="input-field" value={txtSlideshowEmptySub} onChange={(e) => setTxtSlideshowEmptySub(e.target.value)} />
+                                </div>
+                                <div style={{ marginBottom: "15px", borderTop: "1px solid rgba(0,0,0,0.1)", paddingTop: "15px" }}>
+                                    <label style={{ display: "block", marginBottom: "5px", fontSize: "0.9rem", fontWeight: "bold" }}>QR Code Slide (als erstes Slide in der Diashow)</label>
+                                </div>
+                                <div style={{ marginBottom: "15px" }}>
+                                    <label style={{ display: "block", marginBottom: "5px", fontSize: "0.9rem" }}>Titel über QR Code</label>
+                                    <input type="text" className="input-field" value={txtQrSlideTitle} onChange={(e) => setTxtQrSlideTitle(e.target.value)} />
+                                </div>
+                                <div style={{ marginBottom: "15px" }}>
+                                    <label style={{ display: "block", marginBottom: "5px", fontSize: "0.9rem" }}>Untertitel unter QR Code</label>
+                                    <input type="text" className="input-field" value={txtQrSlideSub} onChange={(e) => setTxtQrSlideSub(e.target.value)} />
+                                </div>
+                            </div>
+                        </div>
+
                     </div>
                 )}
 
@@ -826,6 +994,31 @@ export default function Admin() {
                         <span style={{ color: "var(--color-text-light)" }}>
                             {images.length} {images.length === 1 ? "Bild" : "Bilder"} gesamt
                         </span>
+
+                        {images.length > 0 && (
+                            <button
+                                onClick={() => {
+                                    if (selectedImages.length === images.length) {
+                                        setSelectedImages([]);
+                                    } else {
+                                        setSelectedImages(images.map(img => img.filename));
+                                    }
+                                }}
+                                style={{
+                                    background: "rgba(255, 255, 255, 0.5)",
+                                    border: "1px solid var(--glass-border)",
+                                    borderRadius: "8px",
+                                    padding: "4px 12px",
+                                    fontSize: "0.85rem",
+                                    color: "var(--color-text)",
+                                    cursor: "pointer",
+                                    transition: "all 0.2s"
+                                }}
+                                className="hover-scale"
+                            >
+                                {selectedImages.length === images.length ? "Auswahl aufheben" : "Alle auswählen"}
+                            </button>
+                        )}
 
                         {selectedImages.length > 0 && (
                             <div style={{ display: "flex", alignItems: "center", gap: "8px", background: "rgba(224, 122, 95, 0.2)", padding: "4px 12px", borderRadius: "20px" }}>

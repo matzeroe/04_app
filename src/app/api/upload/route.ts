@@ -23,26 +23,19 @@ export async function POST(request: NextRequest) {
             return rawBuffer;
         });
 
-        // Zielverzeichnis
-        const uploadDir = join(process.cwd(), "public", "uploads");
-
-        // Ordner erstellen, falls er nicht existiert
-        if (!existsSync(uploadDir)) {
-            await mkdir(uploadDir, { recursive: true });
-        }
-
-        // Sicherer, eindeutiger Dateiname
-        const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
-        const extension = file.name.split('.').pop() || 'jpg';
-        const filename = `wedding-${uniqueSuffix}.${extension}`;
-        const path = join(uploadDir, filename);
-
         // Backup-Verzeichnis für Originalbilder erstellen und Bild dort als erstes speichern
+        const uploadDir = join(process.cwd(), "public", "uploads");
         const originalsDir = join(uploadDir, "originals");
         if (!existsSync(originalsDir)) {
             await mkdir(originalsDir, { recursive: true });
         }
-        const originalPath = join(originalsDir, filename);
+
+        // Sicherer, eindeutiger Dateiname (Basis)
+        const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
+        const originalExtension = file.name.split('.').pop() || 'jpg';
+        const originalFilename = `wedding-${uniqueSuffix}.${originalExtension}`;
+        const originalPath = join(originalsDir, originalFilename);
+
         await writeFile(originalPath, buffer);
         console.log(`Originaldatei als Backup gespeichert unter ${originalPath}`);
 
@@ -55,6 +48,7 @@ export async function POST(request: NextRequest) {
         let watermarkColor = "#555555";
         let watermarkFrameWidth = 20;
         let watermarkFrameBottom = 80;
+        let watermarkBorderRadius = 24;
         let useWatermarkBgImage = false;
         let imageFilter = "none";
         const settingsPath = join(process.cwd(), "public", "settings.json");
@@ -70,6 +64,7 @@ export async function POST(request: NextRequest) {
                 if (parsed.watermarkColor) watermarkColor = parsed.watermarkColor;
                 if (parsed.watermarkFrameWidth !== undefined) watermarkFrameWidth = parsed.watermarkFrameWidth;
                 if (parsed.watermarkFrameBottom !== undefined) watermarkFrameBottom = parsed.watermarkFrameBottom;
+                if (parsed.watermarkBorderRadius !== undefined) watermarkBorderRadius = parsed.watermarkBorderRadius;
                 if (parsed.useWatermarkBgImage === true) useWatermarkBgImage = true;
                 if (parsed.imageFilter) imageFilter = parsed.imageFilter;
             }
@@ -78,6 +73,16 @@ export async function POST(request: NextRequest) {
         }
 
         const needsProcessing = watermarkEnabled || imageFilter !== "none";
+
+        // Wenn Rahmen aktiviert, als PNG speichern für transparente Ecken
+        const finalExtension = watermarkEnabled ? 'png' : originalExtension;
+        const filename = `wedding-${uniqueSuffix}.${finalExtension}`;
+        const path = join(uploadDir, filename);
+
+        // Ordner erstellen, falls er nicht existiert
+        if (!existsSync(uploadDir)) {
+            await mkdir(uploadDir, { recursive: true });
+        }
 
         if (!needsProcessing) {
             // Ohne Wasserzeichen und Filter speichern
@@ -143,6 +148,12 @@ export async function POST(request: NextRequest) {
 ${mainTexts}
 </svg>`;
 
+                // SVG Maske für abgerundete Ecken (wie in der Diashow)
+                const roundedCornersSvg = Buffer.from(`<?xml version="1.0" encoding="UTF-8"?>
+<svg width="${frameW}" height="${frameH}" viewBox="0 0 ${frameW} ${frameH}" xmlns="http://www.w3.org/2000/svg">
+    <rect x="0" y="0" width="${frameW}" height="${frameH}" rx="${watermarkBorderRadius}" ry="${watermarkBorderRadius}" fill="#ffffff"/>
+</svg>`);
+
                 // Verarbeiten und Speichern
                 const bgImagePath = join(process.cwd(), "public", "watermark-bg.jpg");
                 const hasBgImage = useWatermarkBgImage && existsSync(bgImagePath);
@@ -167,7 +178,12 @@ ${mainTexts}
                                 top: 0,
                                 left: 0,
                             },
+                            {
+                                input: roundedCornersSvg,
+                                blend: 'dest-in'
+                            }
                         ])
+                        .png()
                         .toFile(path);
                 } else {
                     // Fallback: Weißer Rahmen
@@ -178,16 +194,22 @@ ${mainTexts}
                             bottom: watermarkFrameBottom,
                             left: watermarkFrameWidth,
                             right: watermarkFrameWidth,
-                            background: { r: 255, g: 255, b: 255, alpha: 1 }
+                            background: { r: 255, g: 255, b: 255, alpha: 0 } // Transparent padding!
                         })
-                        // 2. Dann das SVG drüberlegen (SVG hat die gleiche End-Größe wie der erweiterte Rahmen)
+                        // 2. Zeichne das weiße Rechteck in der Größe des Rahmens mit border-radius, UND dann das Text SVG
                         .composite([
+                            {
+                                // Weißer Hintergrund (mit abgerundeten Ecken!)
+                                input: roundedCornersSvg,
+                                blend: 'dest-over' // Hinter das Hauptbild legen
+                            },
                             {
                                 input: Buffer.from(svgOverlay),
                                 top: 0,
                                 left: 0,
-                            },
+                            }
                         ])
+                        .png()
                         .toFile(path);
                 }
             } else {

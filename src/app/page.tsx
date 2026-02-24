@@ -28,6 +28,15 @@ export default function Home() {
   const [useUploadPageBgImage, setUseUploadPageBgImage] = useState(false);
   const [uploadBgBlur, setUploadBgBlur] = useState<number>(20);
 
+  // Custom Texts
+  const [txtUploadTitle, setTxtUploadTitle] = useState("Teilt eure schönsten Momente unserer Hochzeit mit uns!");
+  const [txtUploadButton, setTxtUploadButton] = useState("Fotos auswählen");
+  const [txtUploadButtonSub, setTxtUploadButtonSub] = useState("Tippen Sie hier, um beliebig viele Bilder hinzuzufügen");
+  const [txtUploadSubmit, setTxtUploadSubmit] = useState("Bild(er) hochladen");
+  const [txtUploadSuccess, setTxtUploadSuccess] = useState("Erfolgreich hochgeladen!");
+  const [txtUploadSuccessSub, setTxtUploadSuccessSub] = useState("Danke für eure Erinnerungen!");
+  const [txtSlideshowLoginSub, setTxtSlideshowLoginSub] = useState("Bitte geben Sie das Passwort für die Diashow ein.");
+
   useEffect(() => {
     // Event Titel aus Settings laden
     const fetchSettings = async () => {
@@ -38,9 +47,16 @@ export default function Home() {
           if (data.eventName) setEventName(data.eventName);
           if (data.useUploadPageBgImage !== undefined) setUseUploadPageBgImage(data.useUploadPageBgImage);
           if (data.uploadBgBlur !== undefined) setUploadBgBlur(data.uploadBgBlur);
+          if (data.txtUploadTitle) setTxtUploadTitle(data.txtUploadTitle);
+          if (data.txtUploadButton) setTxtUploadButton(data.txtUploadButton);
+          if (data.txtUploadButtonSub) setTxtUploadButtonSub(data.txtUploadButtonSub);
+          if (data.txtUploadSubmit) setTxtUploadSubmit(data.txtUploadSubmit);
+          if (data.txtUploadSuccess) setTxtUploadSuccess(data.txtUploadSuccess);
+          if (data.txtUploadSuccessSub) setTxtUploadSuccessSub(data.txtUploadSuccessSub);
+          if (data.txtSlideshowLoginSub) setTxtSlideshowLoginSub(data.txtSlideshowLoginSub);
         }
       } catch (e) {
-        console.error("Fehler beim Laden des Titels", e);
+        console.error("Fehler beim Laden der Einstellungen", e);
       }
     };
     fetchSettings();
@@ -196,8 +212,8 @@ export default function Home() {
     setIsUploading(true);
     setError(null);
 
-    const uploadPromises = selectedImages.map(async (img) => {
-      try {
+    try {
+      for (const img of selectedImages) {
         const fileToUpload = await getRotatedFile(img);
         const formData = new FormData();
         formData.append("file", fileToUpload);
@@ -207,15 +223,8 @@ export default function Home() {
           body: formData,
         });
 
-        if (!res.ok) throw new Error("Upload fehlgeschlagen");
-      } catch (err) {
-        console.error("Fehler bei Datei " + img.file.name, err);
-        throw err;
+        if (!res.ok) throw new Error("Upload fehlgeschlagen für Datei " + img.file.name);
       }
-    });
-
-    try {
-      await Promise.all(uploadPromises);
 
       setIsSuccess(true);
       // Vorschauen nach kurzer Zeit leeren
@@ -225,6 +234,7 @@ export default function Home() {
       }, 3000);
 
     } catch (err: any) {
+      console.error(err);
       setError("Fehler beim Hochladen einiger Bilder.");
     } finally {
       setIsUploading(false);
@@ -291,7 +301,7 @@ export default function Home() {
             </div>
             <h2 style={{ marginBottom: "20px" }}>{eventName}</h2>
             <p style={{ color: "var(--color-text-light)", marginBottom: "30px", fontSize: "0.95rem" }}>
-              Bitte gib das Passwort ein, um zur Bild-Upload-Seite zu gelangen.
+              {txtSlideshowLoginSub}
             </p>
 
             <form onSubmit={handleLogin}>
@@ -336,8 +346,8 @@ export default function Home() {
             <h1 style={{ color: "var(--color-primary)", marginBottom: "10px", fontSize: "2.5rem" }}>
               {eventName}
             </h1>
-            <p style={{ color: "var(--color-text-light)", fontSize: "1.1rem" }}>
-              Teilt eure schönsten Momente unserer Hochzeit mit uns!
+            <p style={{ color: "var(--color-text-light)", fontSize: "1.1rem", whiteSpace: "pre-line" }}>
+              {txtUploadTitle}
             </p>
           </div>
 
@@ -382,9 +392,9 @@ export default function Home() {
             }}>
               <Upload size={28} style={{ color: "var(--color-primary)" }} />
             </div>
-            <h3 style={{ marginBottom: "8px", textShadow: bgUrl ? "0 0 10px white" : "none" }}>Fotos auswählen</h3>
+            <h3 style={{ marginBottom: "8px", textShadow: bgUrl ? "0 0 10px white" : "none" }}>{txtUploadButton}</h3>
             <p style={{ color: "var(--color-text-light)", fontSize: "0.9rem", fontWeight: bgUrl ? 600 : "normal", textShadow: bgUrl ? "0 0 5px white" : "none" }}>
-              Tippen Sie hier, um beliebig viele Bilder hinzuzufügen
+              {txtUploadButtonSub}
             </p>
           </div>
 
@@ -400,8 +410,8 @@ export default function Home() {
               alignItems: "center"
             }}>
               <CheckCircle size={48} style={{ color: "#4caf50", marginBottom: "10px" }} />
-              <h3 style={{ color: "#4caf50" }}>Erfolgreich hochgeladen!</h3>
-              <p style={{ color: "var(--color-text-light)", marginTop: "10px" }}>Danke für eure Erinnerungen!</p>
+              <h3 style={{ color: "#4caf50" }}>{txtUploadSuccess}</h3>
+              <p style={{ color: "var(--color-text-light)", marginTop: "10px" }}>{txtUploadSuccessSub}</p>
             </div>
           )}
 
@@ -516,9 +526,9 @@ export default function Home() {
             {isUploading ? (
               <><Loader2 className="animate-spin" size={20} /> Werden hochgeladen...</>
             ) : isSuccess ? (
-              <><CheckCircle size={20} /> {selectedImages.length > 1 ? 'Bilder' : 'Bild'} gesendet</>
+              <><CheckCircle size={20} /> Erfolgreich</>
             ) : (
-              <><ImageIcon size={20} /> {selectedImages.length} {selectedImages.length === 1 ? 'Bild' : 'Bilder'} hochladen</>
+              <><ImageIcon size={20} /> {txtUploadSubmit.replace('{count}', selectedImages.length.toString())}</>
             )}
           </button>
 
