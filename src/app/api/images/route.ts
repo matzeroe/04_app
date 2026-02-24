@@ -29,13 +29,14 @@ export async function GET() {
                 return {
                     filename,
                     url: `/api/uploads/${filename}?v=${stats.mtimeMs}`,
-                    createdAt: stats.birthtimeMs || stats.mtimeMs // fallback auf mtime
+                    createdAt: stats.mtimeMs // Wichtig: Striktes mtime, da wir dort das EXIF-Datum via utimes injizieren!
                 };
             })
         );
 
-        // Absteigend sortieren
-        imagesWithStats.sort((a, b) => b.createdAt - a.createdAt);
+        // Aufsteigend nach Datum sortieren (damit sie als Zeitleiste von "alt" nach "neu" von der API kommen)
+        imagesWithStats.sort((a, b) => a.createdAt - b.createdAt);
+        console.log("Images chronologically sorted (first 5):", imagesWithStats.slice(0, 5).map(i => ({ file: i.filename, date: new Date(i.createdAt).toISOString() })));
 
         return NextResponse.json({ images: imagesWithStats });
     } catch (error) {

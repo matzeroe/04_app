@@ -32,6 +32,7 @@ export default function SlideshowAlt() {
 
     const containerRef = useRef<HTMLDivElement>(null);
     const currentIndexRef = useRef(currentIndex);
+    const latestServerImagesRef = useRef<any[]>([]);
 
     useEffect(() => {
         currentIndexRef.current = currentIndex;
@@ -109,6 +110,8 @@ export default function SlideshowAlt() {
 
                 setImages((prev: any[]) => {
                     let serverImages = data.images;
+                    latestServerImagesRef.current = serverImages;
+
                     // Füge das QR-Slide am Anfang hinzu, wenn es nicht leer ist (immer als erstes slide)
                     let newImageArray = [qrSlide, ...serverImages];
 
@@ -116,21 +119,28 @@ export default function SlideshowAlt() {
 
                     const oldUrls = new Set(prev.map(i => i.url));
                     const newOnes = serverImages.filter((i: any) => !oldUrls.has(i.url));
+                    const serverUrls = new Set(newImageArray.map(i => i.url));
 
+                    // 1. Bereinige Bilder, die auf dem Server gelöscht wurden
+                    let copy = prev.filter(img => img.isQrSlide || serverUrls.has(img.url));
+                    let hasChanges = copy.length !== prev.length;
+
+                    // 2. Füge neue Bilder hinzu
                     if (newOnes.length > 0) {
-                        const insertIdx = (currentIndexRef.current + 1) % (prev.length + 1);
+                        hasChanges = true;
                         const taggedNewOnes = newOnes.map((img: any) => ({ ...img, isNew: true }));
-                        const newImages = [...prev];
-                        newImages.splice(insertIdx, 0, ...taggedNewOnes);
+
+                        // Füge die neuen Bilder hintereinander direkt nach dem aktuell angezeigten Bild ein.
+                        const insertIdx = (currentIndexRef.current + 1);
+                        copy.splice(insertIdx, 0, ...taggedNewOnes);
 
                         // Clear the 'isNew' tag after animation finishes
                         setTimeout(() => {
                             setImages(curr => curr.map(img => ({ ...img, isNew: false })));
-                        }, 2000);
-
-                        return newImages;
+                        }, 5000);
                     }
-                    return prev;
+
+                    return hasChanges ? copy : prev;
                 });
             }
 
@@ -167,11 +177,21 @@ export default function SlideshowAlt() {
 
         const timeoutId = setTimeout(() => {
             setLastIndex(currentIndex);
-            setCurrentIndex((prev) => (prev + 1) % images.length);
+
+            const nextIdx = currentIndex + 1;
+            if (nextIdx >= images.length) {
+                // Am Ende eines Durchlaufs: Resette die Playlist auf das saubere, streng chronologische Array
+                console.log('Slideshow Loop Complete. Resetting to chronologial state:', latestServerImagesRef.current.map(img => img.filename));
+                const qrSlide = { isQrSlide: true, url: "qr-placeholder", filename: "qr-code" };
+                setImages([qrSlide, ...latestServerImagesRef.current]);
+                setCurrentIndex(0);
+            } else {
+                setCurrentIndex(nextIdx);
+            }
         }, intervalTime);
 
         return () => clearTimeout(timeoutId);
-    }, [isAuthenticated, images.length, intervalTime, currentIndex]);
+    }, [isAuthenticated, images, intervalTime, currentIndex]);
 
     const getThumbnails = () => {
         if (images.length === 0) return [];
@@ -249,15 +269,12 @@ export default function SlideshowAlt() {
             <div style={{
                 width: "100%",
                 height: "120px",
-                background: "rgba(0,0,0,0.6)",
-                backdropFilter: "blur(10px)",
                 display: "flex",
                 alignItems: "center",
-                justifyContent: "center",
-                gap: "12px",
+                justifyContent: "flex-start",
                 zIndex: 30,
                 position: "relative",
-                padding: "0 20px",
+                padding: "0",
                 overflow: "hidden"
             }}>
                 <div style={{
@@ -272,7 +289,7 @@ export default function SlideshowAlt() {
                         const isCurrent = currentIndex !== 0 && idx === currentIndex - 1;
                         return (
                             <div
-                                key={`${img.url}-${idx}`}
+                                key={img.url}
                                 className={img.isNew ? "drop-in-thumbnail" : ""}
                                 style={{
                                     flexShrink: 0,
@@ -326,19 +343,15 @@ export default function SlideshowAlt() {
                             key={img.url}
                             style={{
                                 position: "absolute",
-                                inset: 0,
+                                inset: "40px",
                                 opacity: opacity,
                                 transition: "all 1.2s cubic-bezier(0.34, 1.56, 0.64, 1)",
                                 zIndex: zIndex,
-                                display: "flex",
-                                alignItems: "center",
-                                justifyContent: "center",
-                                padding: "40px",
+                                display: img.isQrSlide ? "flex" : "block",
+                                alignItems: img.isQrSlide ? "center" : undefined,
+                                justifyContent: img.isQrSlide ? "center" : undefined,
                                 transform: transform,
-                                filter: "drop-shadow(0 20px 40px rgba(0,0,0,0.5))",
-                                width: "100%",
-                                height: "100%",
-                                boxSizing: "border-box"
+                                filter: "drop-shadow(0 20px 40px rgba(0,0,0,0.5))"
                             }}
                         >
                             {img.isQrSlide ? (

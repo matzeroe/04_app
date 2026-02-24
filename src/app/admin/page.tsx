@@ -87,6 +87,15 @@ export default function Admin() {
         }
     }, []);
 
+    // Automatisches Neuladen der Bilder alle 10 Sekunden (wie bei der Diashow)
+    useEffect(() => {
+        if (!isAuthenticated) return;
+        const interval = setInterval(() => {
+            fetchImages();
+        }, 10000);
+        return () => clearInterval(interval);
+    }, [isAuthenticated]);
+
     // Authentifizierung
     const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault();

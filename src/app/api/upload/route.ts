@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
-import { writeFile, mkdir, readFile } from "fs/promises";
+import { writeFile, mkdir, readFile, rename, utimes } from "fs/promises";
 import { join } from "path";
 import { existsSync } from "fs";
 import sharp from "sharp";
+import exifr from "exifr";
 
 export async function POST(request: NextRequest) {
     try {
@@ -22,6 +23,20 @@ export async function POST(request: NextRequest) {
             console.warn("EXIF-Rotation fehlgeschlagen, speichere unmodifiziert:", err);
             return rawBuffer;
         });
+
+        // Aufnahmedatum aus EXIF extrahieren
+        let shootingDate = new Date();
+        try {
+            const exifData = await exifr.parse(rawBuffer);
+            if (exifData && (exifData.DateTimeOriginal || exifData.CreateDate)) {
+                shootingDate = new Date(exifData.DateTimeOriginal || exifData.CreateDate);
+                if (isNaN(shootingDate.getTime())) {
+                    shootingDate = new Date();
+                }
+            }
+        } catch (exifErr) {
+            console.warn("Konnte kein EXIF Datum auslesen, verwende aktuelles Datum:", exifErr);
+        }
 
         // Backup-Verzeichnis für Originalbilder erstellen und Bild dort als erstes speichern
         const uploadDir = join(process.cwd(), "public", "uploads");
@@ -78,6 +93,7 @@ export async function POST(request: NextRequest) {
         const finalExtension = watermarkEnabled ? 'png' : originalExtension;
         const filename = `wedding-${uniqueSuffix}.${finalExtension}`;
         const path = join(uploadDir, filename);
+        const tmpPath = join(uploadDir, `${filename}.tmp`);
 
         // Ordner erstellen, falls er nicht existiert
         if (!existsSync(uploadDir)) {
@@ -86,7 +102,14 @@ export async function POST(request: NextRequest) {
 
         if (!needsProcessing) {
             // Ohne Wasserzeichen und Filter speichern
-            await writeFile(path, buffer);
+            await writeFile(tmpPath, buffer);
+            await rename(tmpPath, path);
+
+            // Setze Datum auch für das Fallback-Original
+            try {
+                await utimes(path, shootingDate, shootingDate);
+            } catch (e) { }
+
             console.log(`Datei gespeichert unter ${path} (Original)`);
             return NextResponse.json({ success: true, filename, url: `/api/uploads/${filename}` });
         }
@@ -184,7 +207,8 @@ ${mainTexts}
                             }
                         ])
                         .png()
-                        .toFile(path);
+                        .toFile(tmpPath);
+                    await rename(tmpPath, path);
                 } else {
                     // Fallback: Weißer Rahmen
                     await image
@@ -207,23 +231,39 @@ ${mainTexts}
                                 input: Buffer.from(svgOverlay),
                                 top: 0,
                                 left: 0,
+                            },
+                            {
+                                input: roundedCornersSvg,
+                                blend: 'dest-in' // Clip the entire result exactly to the rounded SVG box!
                             }
                         ])
                         .png()
-                        .toFile(path);
+                        .toFile(tmpPath);
+                    await rename(tmpPath, path);
                 }
             } else {
                 // Nur Filter anwenden
-                await image.toFile(path);
+                await image.toFile(tmpPath);
+                await rename(tmpPath, path);
             }
 
         } catch (sharpError) {
             console.warn("Fehler bei der Bildverarbeitung, speichere ohne Wasserzeichen:", sharpError);
             // Fallback für den seltenen Fall, dass sharp abstürzt oder das Bildformat ungültig ist
-            await writeFile(path, buffer);
+            await writeFile(tmpPath, buffer);
+            await rename(tmpPath, path);
         }
 
         console.log(`Datei gespeichert unter ${path}`);
+
+        // Setze das Datei-Datum (mtime/atime) auf das Original-Aufnahmedatum (für chronologische Sortierung)
+        try {
+            await utimes(originalPath, shootingDate, shootingDate);
+            await utimes(path, shootingDate, shootingDate);
+            console.log(`Datei-Datum für ${filename} auf ${shootingDate.toISOString()} gesetzt.`);
+        } catch (timeErr) {
+            console.warn("Fehler beim Setzen des Datei-Datums:", timeErr);
+        }
 
         return NextResponse.json({ success: true, filename, url: `/api/uploads/${filename}` });
     } catch (error) {

@@ -13,6 +13,7 @@ interface SelectedImage {
 export default function Home() {
   const [selectedImages, setSelectedImages] = useState<SelectedImage[]>([]);
   const [isUploading, setIsUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
   const [isSuccess, setIsSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -211,8 +212,10 @@ export default function Home() {
 
     setIsUploading(true);
     setError(null);
+    setUploadProgress(0);
 
     try {
+      let completed = 0;
       for (const img of selectedImages) {
         const fileToUpload = await getRotatedFile(img);
         const formData = new FormData();
@@ -224,6 +227,10 @@ export default function Home() {
         });
 
         if (!res.ok) throw new Error("Upload fehlgeschlagen für Datei " + img.file.name);
+
+        // Update progress after successful upload of one image
+        completed++;
+        setUploadProgress(Math.round((completed / selectedImages.length) * 100));
       }
 
       setIsSuccess(true);
@@ -521,15 +528,38 @@ export default function Home() {
             className="btn-primary"
             onClick={handleUpload}
             disabled={selectedImages.length === 0 || isUploading || isSuccess}
-            style={{ width: "100%", fontSize: "1.1rem" }}
+            style={{
+              width: "100%",
+              fontSize: "1.1rem",
+              position: "relative",
+              overflow: "hidden",
+            }}
           >
-            {isUploading ? (
-              <><Loader2 className="animate-spin" size={20} /> Werden hochgeladen...</>
-            ) : isSuccess ? (
-              <><CheckCircle size={20} /> Erfolgreich</>
-            ) : (
-              <><ImageIcon size={20} /> {txtUploadSubmit.replace('{count}', selectedImages.length.toString())}</>
+            {/* Progress Fill Overlay */}
+            {isUploading && selectedImages.length > 1 && (
+              <div style={{
+                position: "absolute",
+                top: 0,
+                left: 0,
+                height: "100%",
+                width: `${uploadProgress}%`,
+                background: "#90EE90", // Light green
+                opacity: 0.8,
+                transition: "width 0.3s ease",
+                zIndex: 0
+              }} />
             )}
+
+            {/* Button Content */}
+            <span style={{ position: "relative", zIndex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: "8px", width: "100%" }}>
+              {isUploading ? (
+                <><Loader2 className="animate-spin" size={20} /> Werden hochgeladen... {selectedImages.length > 1 && `(${uploadProgress}%)`}</>
+              ) : isSuccess ? (
+                <><CheckCircle size={20} /> Erfolgreich</>
+              ) : (
+                <><ImageIcon size={20} /> {txtUploadSubmit.replace('{count}', selectedImages.length.toString())}</>
+              )}
+            </span>
           </button>
 
         </div>
